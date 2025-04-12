@@ -22,3 +22,11 @@ A full-featured blogging platform with admin controls, user authentication, and 
    ```bash
    git clone https://github.com/yourusername/flask-blog.git
    cd flask-blog
+2. Install dependencies:
+```
+pip install -r requirements.txt 
+```
+3. Run
+```
+python app.py
+```
