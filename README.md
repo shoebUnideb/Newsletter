@@ -19,14 +19,24 @@ A full-featured blogging platform with admin controls, user authentication, and 
 ## 🛠️ Installation & Setup
 
 1. **Clone the repository**:
-   ```bash
+   ```
    git clone https://github.com/yourusername/flask-blog.git
    cd flask-blog
+   ```
 2. Install dependencies:
 ```
-pip install -r requirements.txt 
+   pip install -r requirements.txt 
 ```
 3. Run
 ```
-python app.py
+   python app.py
 ```
+4. Admin Access
+   Default credentials:
+   ```
+   Username: admin
+   Password: admin123
+   ```
+5. # To update credentials:
+Edit ADMIN_USERNAME and ADMIN_PASSWORD in app.py <br>
+Restart server - old credentials will be invalidated automatically<br>
