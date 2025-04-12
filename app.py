@@ -195,10 +195,10 @@ def user_posts():
 # Initialize database
 with app.app_context():
     db.create_all()
-    if not User.query.filter_by(username='zeeshan').first():
+    if not User.query.filter_by(username='admin').first():
         admin = User(
-            username='zeeshan',
-            password=generate_password_hash('zeeshan123'),
+            username='admin',
+            password=generate_password_hash('admin123'),
             is_admin=True
         )
         db.session.add(admin)
