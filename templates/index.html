@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="hero">
+        <h2>Welcome to our Blog</h2>
+        <p>Read the latest posts from our community</p>
+    </section>
+
+    <section class="posts">
+        <h3>Latest Posts</h3>
+        <div class="post-list">
+            {% for post in posts %}
+                <article class="post">
+                    <h4>{{ post.title }}</h4>
+                    {% if post.image %}
+                        <div class="post-image-container">
+                            <img src="{{ url_for('static', filename='uploads/thumbs/' + post.image) }}" 
+                                 data-full="{{ url_for('static', filename='uploads/' + post.image) }}"
+                                 class="post-image" 
+                                 alt="{{ post.title }}"
+                                 loading="lazy">
+                        </div>
+                    {% endif %}
+                    <div class="post-preview">
+                        <p>{{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}</p>
+                    </div>
+                    <div class="post-actions">
+                        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn view-more">View More</a>
+                    </div>
+                    <div class="post-meta">
+                        <small>Posted by: {{ post.author.username }}</small>
+                        <small class="post-date">{{ post.date_posted.strftime('%B %d, %Y') if post.date_posted }}</small>
+                    </div>
+                </article>
+            {% else %}
+                <div class="no-posts">
+                    <p>No posts available yet. Check back later!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

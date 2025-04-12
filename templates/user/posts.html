@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="user-posts">
+        <h2>All Posts</h2>
+        <div class="post-list">
+            {% for post in posts %}
+                <article class="post">
+                    <h4>{{ post.title }}</h4>
+                    {% if post.image %}
+                        <div class="post-image-container">
+                            <img src="{{ url_for('static', filename='uploads/thumbs/' + post.image) }}" 
+                                 data-full="{{ url_for('static', filename='uploads/' + post.image) }}"
+                                 class="post-image" 
+                                 alt="{{ post.title }}"
+                                 loading="lazy">
+                        </div>
+                    {% endif %}
+                    <div class="post-preview">
+                        <p>{{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}</p>
+                    </div>
+                    <div class="post-actions">
+                        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn view-more">View More</a>
+                    </div>
+                    <small>Posted by: {{ post.author.username }}</small>
+                </article>
+            {% else %}
+                <p>No posts available.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
