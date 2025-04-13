@@ -1,14 +1,19 @@
+import os
+from dotenv import load_dotenv
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from PIL import Image
-import os
 import io
 
+# Loading environment variables
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key-for-dev')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_IMAGE_SIZE'] = (800, 600)
@@ -23,6 +28,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,6 +37,27 @@ class Post(db.Model):
     image = db.Column(db.String(100))
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     author = db.relationship('User', backref=db.backref('posts', lazy=True))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Initialize database with fresh admin credentials
+with app.app_context():
+    db.create_all()
+    
+    # Remove all existing admin users
+    User.query.filter_by(is_admin=True).delete()
+    
+    # Create new admin with current credentials
+    admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+    admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
+    
+    if not User.query.filter_by(username=admin_username).first():
+        new_admin = User(
+            username=admin_username,
+            password=generate_password_hash(admin_password),
+            is_admin=True
+        )
+        db.session.add(new_admin)
+        db.session.commit()
 
 # Helper Functions
 def allowed_file(filename):
@@ -59,15 +86,9 @@ def save_image(file, filename):
     return filename
 
 # Routes
-@app.route('/post/<int:post_id>')
-def view_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    return render_template('user/view_post.html', post=post)
-
-
 @app.route('/')
 def home():
-    posts = Post.query.all()
+    posts = Post.query.order_by(Post.date_posted.desc()).all()
     return render_template('index.html', posts=posts)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -76,6 +97,16 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
+        
+        # Get current admin credentials from env
+        admin_user = os.getenv('ADMIN_USERNAME', 'admin')
+        admin_pass = os.getenv('ADMIN_PASSWORD', 'admin123')
+        
+        # Special check for admin credentials
+        if username == admin_user:
+            if not (user and check_password_hash(user.password, admin_pass)):
+                flash('Admin credentials have been updated. Please use current credentials.', 'error')
+                return redirect(url_for('login'))
         
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
@@ -99,7 +130,7 @@ def admin_dashboard():
         flash('You do not have permission to access this page', 'error')
         return redirect(url_for('home'))
     
-    posts = Post.query.all()
+    posts = Post.query.order_by(Post.date_posted.desc()).all()
     return render_template('admin/dashboard.html', posts=posts)
 
 @app.route('/admin/post/new', methods=['GET', 'POST'])
@@ -183,27 +214,16 @@ def delete_post(post_id):
     flash('Post deleted successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/post/<int:post_id>')
+def view_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('user/view_post.html', post=post)
+
 @app.route('/user/posts')
 def user_posts():
-    if not session.get('user_id'):
-        flash('Please login to view posts', 'error')
-        return redirect(url_for('login'))
-    
-    posts = Post.query.all()
+    posts = Post.query.order_by(Post.date_posted.desc()).all()
     return render_template('user/posts.html', posts=posts)
-
-# Initialize database
-with app.app_context():
-    db.create_all()
-    if not User.query.filter_by(username='admin').first():
-        admin = User(
-            username='admin',
-            password=generate_password_hash('admin123'),
-            is_admin=True
-        )
-        db.session.add(admin)
-        db.session.commit()
 
 if __name__ == '__main__':
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs'), exist_ok=True)
-    app.run(debug=True)
+    app.run(debug=os.getenv('FLASK_DEBUG', 'False') == 'True')
