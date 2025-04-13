@@ -38,5 +38,6 @@ A full-featured blogging platform with admin controls, user authentication, and 
    Password: admin123
    ```
 5. To update credentials:
-Edit ADMIN_USERNAME and ADMIN_PASSWORD in app.py <br>
+Make a .env file with credentials guided in the terminal and an example is given in .envexample. 
+Edit ADMIN_USERNAME and ADMIN_PASSWORD in a .env file <br>
 Restart server - old credentials will be invalidated automatically<br>
