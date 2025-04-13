@@ -1,0 +1,5 @@
+SECRET_KEY=change_this_to_a_random_string
+ADMIN_USERNAME=change_this_admin_username
+ADMIN_PASSWORD=change_this_to_strong_password
+DATABASE_URI=sqlite:///database.db
+FLASK_DEBUG=False
