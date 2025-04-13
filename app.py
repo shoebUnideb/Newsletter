@@ -8,6 +8,12 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import io
 
+#check if the .env file exists already
+if not os.path.exists('.env'):
+    raise RuntimeError(
+        "Missing .env file - please create one based on .env.example\n"
+        "Required variables: SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD, DATABASE_URI"
+    )
 # Loading environment variables
 load_dotenv()
 
